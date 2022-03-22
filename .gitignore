@@ -1,0 +1,7 @@
+# ================#
+# folders to ignore
+# ================#
+
+/predicted_trajs/
+/resolved_initial/
+/unres_initial/

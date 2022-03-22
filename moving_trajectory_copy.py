@@ -1,0 +1,201 @@
+"""This script contains functions to generate and draw the aircraft trajectories on the SCREEN"""
+
+
+import numpy as np
+import pandas as pd
+from buttons import Button
+import os
+
+import datetime
+import pygame
+WIDTH, HEIGHT = 1920, 1080
+SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
+FPS = 10
+fpsClock = pygame.time.Clock()
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+GREEN = (0, 200, 0)
+DARKGREEN = (0, 128, 0)
+DARK_GREEN = (100, 210, 150)
+LIGHT_BLUE = (224, 255, 255)
+PASTEL_BLUE = (202, 228, 241)
+MAP = pygame.image.load('map.jpg')
+sector = pygame.transform.scale(MAP, (WIDTH-100, HEIGHT-100))
+
+
+def to_pixels(lon, lat):
+    """convert lon lat to pixels. Returns integer values of x,y as pixels"""
+    map = [103.8, 107.8, 2, 5]  # x1,x2,y1,y2
+    x_diff = lon - map[0]
+    y_diff = lat - map[2]
+
+    xrange = map[1] - map[0]
+    yrange = map[3] - map[2]
+
+    return int(x_diff/xrange * (1749-72) + 72), int(954 - (y_diff/yrange) * (954-26))
+
+
+def pred_trajectory(filename, color):
+    action = True
+    df = pd.read_csv(filename)
+    lon1 = []
+    lat1 = []
+    for i in range(len(df)):
+        pixels = to_pixels(df.loc[i, 'longitude'], df.loc[i, 'latitude'])
+        pygame.draw.circle(SCREEN, color, (pixels[0], pixels[1]), 4)
+        # pygame.display.update()
+    return action
+
+
+Damog = [4.206944444444445, 105.0038888888889]
+
+damog_trans = to_pixels(Damog[1], Damog[0])
+print(damog_trans)
+
+accept = Button(82, 1000, 'Accept')
+reject = Button(550, 1000, 'Reject')
+next_scen = Button(1020, 1000, 'Next')
+exitbutton = Button(1570, 1000, 'Exit')
+
+dir_res = 'resolved_initial/'
+dir_unres = 'unres_initial/'
+dir_pred = 'predicted_trajs/'
+
+sorted_resdir = sorted(os.listdir(
+    dir_res), key=lambda x: int(x.split('.')[0][15:]))
+print(sorted_resdir)
+sorted_unresdir = sorted(os.listdir(dir_unres),
+                         key=lambda x: int(x.split('.')[0][15:]))
+print(sorted_unresdir)
+
+sorted_preddir = sorted(os.listdir(dir_pred),
+                        key=lambda x: int(x.split('.')[0][15:]))
+# predicted flight is the maneuverd/resolved flight
+print(sorted_preddir)
+
+
+def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
+    action = True
+
+    featurefile = pd.read_csv('featurefile_110222set1.csv')
+
+    for _d1, _d2, _d3 in zip(sorted_resdir, sorted_unresdir, sorted_preddir):
+        resflight = pd.read_csv(dir_res + '{}'.format(_d1))
+        unresflight = pd.read_csv(dir_unres + '{}'.format(_d2))
+        pred_res = pd.read_csv(dir_pred + '{}'.format(_d3))
+        print(_d1, _d2, _d3)
+
+        # calculating timesteps to maneuver initiation
+        for f in range(len(featurefile)):
+            if _d1 == featurefile.loc[f, 'resolvedflight']:
+                maneuv_time = featurefile.loc[f, 'timetoresolution']
+                steps = int((maneuv_time * 60) / 5)
+                break
+
+        if len(pred_res) > len(unresflight):
+            shorterflight = unresflight
+        else:
+            shorterflight = pred_res
+        if pd.to_datetime(pred_res.loc[0, 'time']) > pd.to_datetime(unresflight.loc[0, 'time']):
+            startfirst = unresflight
+            startsecond = pred_res
+            delta = pd.to_timedelta(
+                startsecond.loc[0, 'time']) - pd.to_timedelta(startfirst.loc[0, 'time'])
+            delta_str_minutes = int(str(delta)[10:12])
+            delta_str_seconds = int(str(delta)[13:])
+            offset = int((delta_str_minutes*60 + delta_str_seconds)/5)
+        else:
+            startfirst = pred_res
+            startsecond = unresflight
+            delta = pd.to_timedelta(
+                startsecond.loc[0, 'time']) - pd.to_timedelta(startfirst.loc[0, 'time'])
+            delta_str_minutes = int(str(delta)[10:12])
+            delta_str_seconds = int(str(delta)[13:])
+            offset = int((delta_str_minutes*60 + delta_str_seconds)/5)
+
+        for i in range(len(shorterflight)):
+            SCREEN.blit(sector, (0, 0))
+            trajp = pred_trajectory(dir_pred + '{}'.format(_d1), LIGHT_BLUE)
+
+            if i < offset:
+                pixels = to_pixels(
+                    startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
+                pygame.draw.circle(SCREEN, color1, (pixels[0], pixels[1]), 3)
+
+                # flightname = font.render()
+                fpsClock.tick(FPS)
+                for event in pygame.event.get():
+                    continue
+                # if event.type == pygame.MOUSEBUTTONDOWN:
+                # print(event.pos)
+
+                # keys = pygame.key.get_pressed()
+
+                accepted = accept.draw_button(SCREEN)
+                rejected = reject.draw_button(SCREEN)
+                nextclicked = next_scen.draw_button(SCREEN)
+                exitinterface = exitbutton.draw_button(SCREEN)
+
+                if accepted == True:
+                    print('Accpet pressed')
+                    # fpsClock.tick(FPS)
+                    break
+                # continue
+
+                elif rejected == True:
+                    print('Rejected')
+                    break
+
+                elif nextclicked == True:
+                    print('NEXT')
+                    break
+
+                elif exitinterface == True:
+                    pygame.quit()
+
+                else:
+                    pass
+
+                pygame.display.update()
+            else:
+                pixels1 = to_pixels(
+                    startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
+                pygame.draw.circle(SCREEN, color1, (pixels1[0], pixels1[1]), 3)
+                pixels2 = to_pixels(
+                    startsecond.loc[i-offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
+                pygame.draw.circle(SCREEN, color2, (pixels2[0], pixels2[1]), 3)
+                fpsClock.tick(FPS)
+                for event in pygame.event.get():
+                    continue
+                pygame.draw.circle(
+                    SCREEN, RED, (damog_trans[0], damog_trans[1]), 5)
+
+                accepted = accept.draw_button(SCREEN)
+                rejected = reject.draw_button(SCREEN)
+                nextclicked = next_scen.draw_button(SCREEN)
+                exitinterface = exitbutton.draw_button(SCREEN)
+
+                if accepted == True:
+                    print('Accpet pressed')
+                    # fpsClock.tick(FPS)
+                    break
+
+                elif rejected == True:
+                    print('Rejected')
+                    break
+
+                elif nextclicked == True:
+                    print('NEXT')
+                    break
+
+                elif exitinterface == True:
+                    pygame.quit()
+
+                else:
+                    pass
+
+                pygame.display.update()
+
+    return action
