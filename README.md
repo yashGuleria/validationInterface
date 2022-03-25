@@ -1,2 +1,6 @@
 # validationInterface
-development of an interactive interface using pyGame for ATC validation
+
+Development of an interactive interface using pyGame for ATC validation.
+to run the interface, run the validation_interface_main.py file. Please read the requirements.txt for the required libraries.
+
+<img src="relative/path/in/repository/to/interfaceImage.png" width="128"/>

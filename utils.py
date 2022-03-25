@@ -82,11 +82,17 @@ def show_info(featurefile, index):
     y = 150
     delta = 50
     "show info of heading , CTD and merging waypoint"
-    heading = InfoButton(x, y, 'Heading : ' +
+    guideline1 = InfoButton(
+        x+50, y-150, 'Please select a preference')
+    guide1 = guideline1.draw_button(SCREEN)
+    guideline2 = InfoButton(
+        x+50, y-100, 'before maneuver initiation')
+    guide2 = guideline2.draw_button(SCREEN)
+    heading = InfoButton(x, y + 2*delta, 'Heading : ' +
                          str(featurefile.loc[index, 'headingAngle']) + chr(176))
     head = heading.draw_button(SCREEN)
     crosstrackdev = InfoButton(
-        x, y + delta, 'CTD : ' + str(featurefile.loc[index, 'crosstrack_dist_max']) + 'Nm')
+        x, y + 3*delta, 'CTD : ' + str(featurefile.loc[index, 'crosstrack_dist_max']) + 'Nm')
     ctd = crosstrackdev.draw_button(SCREEN)
     pygame.display.update()
 
@@ -102,3 +108,6 @@ def segmentplot(df, index1, index2):
         pygame.display.update()
         fpsClock.tick(FPS)
     return action
+
+def draw_datablock(x, y):
+    
