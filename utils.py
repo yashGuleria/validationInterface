@@ -77,6 +77,7 @@ def trimmed_flights(resflight, unresflight, pred_res):
 
 
 def show_info(featurefile, index):
+    """show information of the maneuvers"""
     action = True
     x = 1600
     y = 150
@@ -109,5 +110,4 @@ def segmentplot(df, index1, index2):
         fpsClock.tick(FPS)
     return action
 
-def draw_datablock(x, y):
     

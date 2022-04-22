@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import sys
 from utils import *
-from buttons import Button, InfoButton
+from buttons import Button, InfoButton, FlightDataButton
 
 
 from matplotlib.pyplot import pause
@@ -13,7 +13,7 @@ import datetime
 import pygame
 WIDTH, HEIGHT = 1920, 1080
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
-FPS = 10
+FPS = 3
 fpsClock = pygame.time.Clock()
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -64,7 +64,9 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
 
         if pd.to_datetime(resflight_t.loc[0, 'time']) > pd.to_datetime(unresflight_t.loc[0, 'time']):
             startfirst = unresflight_t
+            startfirst_name = _d2[13:-4]
             startsecond = resflight_t
+            startsecond_name = _d1[13:-4]
             delta = pd.to_timedelta(
                 startsecond.loc[0, 'time']) - pd.to_timedelta(startfirst.loc[0, 'time'])
             delta_str_minutes = int(str(delta)[10:12])
@@ -77,40 +79,21 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
 
             for i in range(offset+1):
                 SCREEN.blit(sector, (0, 0))
-                trajp = pred_trajectory(
-                    dir_pred + '{}'.format(_d1), LIGHT_BLUE)
+                trajp = pred_trajectory(dir_pred + '{}'.format(_d1), LIGHT_BLUE)
 
-                pixels1 = to_pixels(
+                pixel1 = to_pixels(
                     startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
-                pygame.draw.circle(SCREEN, color1, (pixels1[0], pixels1[1]), 3)
+                pygame.draw.circle(SCREEN, color1, (pixel1[0], pixel1[1]), 3)
+
+                flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                flight1_info.draw_button(SCREEN)
                 fpsClock.tick(FPS)
-                # if len(pygame.event.get()):
-                #     pass
-                # for event in pygame.event.get():
-                #     continue
+
                 accepted = accept.draw_button(SCREEN)
                 rejected = reject.draw_button(SCREEN)
                 nextclicked = next_scen.draw_button(SCREEN)
                 exitinterface = exitbutton.draw_button(SCREEN)
                 pygame.display.update()
-
-            # for i in range(offset, steps):
-            #     accepted = accept.draw_button(SCREEN)
-            #     # print(accept)
-            #     rejected = reject.draw_button(SCREEN)
-            #     nextclicked = next_scen.draw_button(SCREEN)
-            #     exitinterface = exitbutton.draw_button(SCREEN)
-
-            #     if accepted:
-            #         print('GET TRUE CLICK')
-            #         resolution_accepted = True
-            #         break
-            #     # if not accept:
-            #     #     pause(0.01)
-
-                # else:
-                # resolution_accepted == False
-            # print('resolution_accepted: ', resolution_accepted)
 
             for i in range(offset, steps-offset):
                 accepted = accept.draw_button(SCREEN)
@@ -126,6 +109,9 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                 if rejected:
                     print("RESOLUTION REJECTED")
                     resolution_rejected = True
+                         
+                if nextclicked:
+                    break
 
                 SCREEN.blit(sector, (0, 0))
                 trajp = pred_trajectory(
@@ -133,10 +119,14 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                 pixel1 = to_pixels(
                     startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
                 pygame.draw.circle(SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
+                flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                flight1_info.draw_button(SCREEN)
 
-                pixel2 = to_pixels(
-                    startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
+                pixel2 = to_pixels(startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
                 pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+                flight2_info = FlightDataButton(pixel2[0], pixel2[1], [startsecond_name, 'FL330', '450 Kts' ])
+                flight2_info.draw_button(SCREEN)
+                pygame.display.update()
 
                 for event in pygame.event.get():
                     continue
@@ -151,11 +141,16 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                     startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
                 pygame.draw.circle(SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
 
+                flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                flight1_info.draw_button(SCREEN)
+
                 if resolution_accepted == True:
                     print("MODIFIED")
                     pixel2 = to_pixels(
                         pred_res_t.loc[i - offset, 'longitude'], pred_res_t.loc[i - offset, 'latitude'])
                     pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+                    flight2_info = FlightDataButton(pixel2[0], pixel2[1], [startsecond_name, 'FL330', '450 Kts' ])
+                    flight2_info.draw_button(SCREEN)
                     accepted = accept.draw_button(SCREEN)
                     rejected = reject.draw_button(SCREEN)
                     nextclicked = next_scen.draw_button(SCREEN)
@@ -172,6 +167,8 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                     pixel2 = to_pixels(
                         startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
                     pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+                    flight2_info = FlightDataButton(pixel2[0], pixel2[1], [startsecond_name, 'FL330', '450 Kts' ])
+                    flight2_info.draw_button(SCREEN)
                     accepted = accept.draw_button(SCREEN)
                     rejected = reject.draw_button(SCREEN)
                     nextclicked = next_scen.draw_button(SCREEN)
@@ -186,6 +183,8 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
         else:
             startfirst = resflight_t
             startsecond = unresflight_t
+            startfirst_name = _d1[13:-4]
+            startsecond_name = _d2[13:-4]
 
             delta = pd.to_timedelta(
                 startsecond.loc[0, 'time']) - pd.to_timedelta(startfirst.loc[0, 'time'])
@@ -202,37 +201,17 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                 trajp = pred_trajectory(
                     dir_pred + '{}'.format(_d1), LIGHT_BLUE)
 
-                pixels1 = to_pixels(
-                    startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
-                pygame.draw.circle(SCREEN, color1, (pixels1[0], pixels1[1]), 3)
+                pixel1 = to_pixels(startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
+                pygame.draw.circle(SCREEN, color1, (pixel1[0], pixel1[1]), 3)
+                flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                flight1_info.draw_button(SCREEN)
                 fpsClock.tick(FPS)
-                # if len(pygame.event.get()):
-                #     pass
-                # for event in pygame.event.get():
-                #     continue
+
                 accepted = accept.draw_button(SCREEN)
                 rejected = reject.draw_button(SCREEN)
                 nextclicked = next_scen.draw_button(SCREEN)
                 exitinterface = exitbutton.draw_button(SCREEN)
                 pygame.display.update()
-
-            # for i in range(offset, steps):
-            #     accepted = accept.draw_button(SCREEN)
-            #     # print(accept)
-            #     rejected = reject.draw_button(SCREEN)
-            #     nextclicked = next_scen.draw_button(SCREEN)
-            #     exitinterface = exitbutton.draw_button(SCREEN)
-
-            #     if accepted:
-            #         print('GET TRUE CLICK')
-            #         resolution_accepted = True
-            #         break
-                # if not accept:
-                #     pause(0.01)
-
-                # else:
-                # resolution_accepted == False
-            # print('resolution_accepted: ', resolution_accepted)
 
             for i in range(offset, steps):
                 accepted = accept.draw_button(SCREEN)
@@ -249,16 +228,24 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                     print("RESOLUTION REJECTED")
                     resolution_rejected = True
 
+                for event in pygame.event.get():
+                    continue
+
                 SCREEN.blit(sector, (0, 0))
                 trajp = pred_trajectory(
                     dir_pred + '{}'.format(_d1), LIGHT_BLUE)
                 pixel1 = to_pixels(
                     startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
                 pygame.draw.circle(SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
+                flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                flight1_info.draw_button(SCREEN)
 
                 pixel2 = to_pixels(
                     startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
                 pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+                flight2_info = FlightDataButton(pixel2[0], pixel2[1], [startsecond_name, 'FL330', '450 Kts' ])
+                flight2_info.draw_button(SCREEN)
+                pygame.display.update()
 
                 for event in pygame.event.get():
                     continue
@@ -275,11 +262,14 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
 
                     pixel1 = to_pixels(
                         pred_res_t.loc[i, 'longitude'], pred_res_t.loc[i, 'latitude'])
-                    pygame.draw.circle(
-                        SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
+                    pygame.draw.circle(SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
+                    flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                    flight1_info.draw_button(SCREEN)
                     pixel2 = to_pixels(
                         startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
                     pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+                    flight2_info = FlightDataButton(pixel2[0], pixel2[1], [startsecond_name, 'FL330', '450 Kts' ])
+                    flight2_info.draw_button(SCREEN)
                     accepted = accept.draw_button(SCREEN)
                     rejected = reject.draw_button(SCREEN)
                     nextclicked = next_scen.draw_button(SCREEN)
@@ -295,11 +285,19 @@ def line_evolve(sorted_resdir, sorted_unresdir, sorted_preddir, color1, color2):
                 else:
                     pixel1 = to_pixels(
                         startfirst.loc[i, 'longitude'], startfirst.loc[i, 'latitude'])
-                    pygame.draw.circle(
-                        SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
+                    pygame.draw.circle(SCREEN, BLACK, (pixel1[0], pixel1[1]), 3)
+                    flight1_info = FlightDataButton(pixel1[0], pixel1[1], [startfirst_name, 'FL330', '450 Kts' ])
+                    flight1_info.draw_button(SCREEN)
                     pixel2 = to_pixels(
                         startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
                     pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+
+                    pixel2 = to_pixels(
+                        startsecond.loc[i - offset, 'longitude'], startsecond.loc[i - offset, 'latitude'])
+                    pygame.draw.circle(SCREEN, RED, (pixel2[0], pixel2[1]), 3)
+                    flight2_info = FlightDataButton(pixel2[0], pixel2[1], [startsecond_name, 'FL330', '450 Kts' ])
+                    flight2_info.draw_button(SCREEN)
+
                     accepted = accept.draw_button(SCREEN)
                     rejected = reject.draw_button(SCREEN)
                     nextclicked = next_scen.draw_button(SCREEN)

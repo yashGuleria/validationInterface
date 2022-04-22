@@ -14,10 +14,11 @@ PASTEL_BLUE = (202, 228, 241)
 pygame.init()
 font = pygame.font.SysFont('Constantia', 35)
 font2 = pygame.font.SysFont('Arial', 35)
+font3 = pygame.font.SysFont('Arial', 14)
 
 pygame.font.init()
 
-FPS = 5
+FPS = 3
 fpsClock = pygame.time.Clock()
 
 clicked = False
@@ -107,3 +108,30 @@ class InfoButton():
         pygame.display.update()
 
         return action
+
+
+class FlightDataButton():
+    """to draw the flight information data block"""
+    width = 2
+    height = 1
+    text_color = (0, 0, 0)
+
+    def __init__(self, x, y, flightinfo): #flightinfo should be a list [callsign, FL, speed]
+        self.x = x #longitudess
+        self.y = y #latitude
+        self.flightinfo = flightinfo
+
+    def draw_button(self, surface):
+        button_rect = Rect(self.x, self.y, self.width, self.height)
+
+        txt_img1 = font3.render(self.flightinfo[0], True, self.text_color)
+        txt_len1 = txt_img1.get_width()
+        surface.blit(txt_img1, (self.x + int(self.width / 2) -
+                                int(txt_len1 / 2), self.y + 2))
+
+        txt_img2 = font3.render((self.flightinfo[1] + '  ' +self.flightinfo[2]), True, self.text_color)
+        txt_len2 = txt_img2.get_width()
+        surface.blit(txt_img2, (self.x + int(self.width / 2) -int(txt_len2 / 2), self.y + 20))
+
+        pygame.display.update()
+        

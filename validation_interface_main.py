@@ -17,7 +17,7 @@ WIDTH, HEIGHT = 1920, 1080
 SCREEN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("ATC VALIDATION ON AIR TRAFFIC CONFLICT RESOLUTION")
 
-FPS = 10
+FPS = 3
 fpsClock = pygame.time.Clock()
 # color for the GUI
 WHITE = (255, 255, 255)
